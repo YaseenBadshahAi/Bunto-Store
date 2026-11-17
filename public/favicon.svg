@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#BB080B"/>
+  <path d="M16 22.7 L26.7 14.3 L32.7 19 L39.3 13.7 L48 22.7" fill="none" stroke="#F0EDE8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="32" y="46" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="800" font-style="italic" fill="#F0EDE8">BUNTO<tspan font-size="8" dy="-4">°</tspan></text>
+</svg>
