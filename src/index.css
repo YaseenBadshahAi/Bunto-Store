@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --milano-red: #BB080B;
+  --cararra: #F0EDE8;
+  --chalk: #E8E5DF;
+  --slate: #C9C5BE;
+  --carbon: #191919;
+  --wall-bg: #F0EDE8;
+  --wall-shade: #E8E5DF;
+  --floor-top: #C9C5BE;
+  --floor-bottom: #E8E5DF;
+  --ink: #191919;
+  --muted: #6A6660;
+  --card: #F0EDE8;
+  --line: rgba(25, 25, 25, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--wall-bg);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.studio-room-bg {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 34%, rgba(255, 255, 255, 0.48) 0%, rgba(240, 237, 232, 0.35) 58%, rgba(201, 197, 190, 0.45) 100%),
+    linear-gradient(180deg, #F0EDE8 0%, #E8E5DF 70%, #C9C5BE 70.1%, #DFDCD5 100%);
+}
+
+.studio-floor-seam {
+  background: linear-gradient(
+    180deg,
+    rgba(25, 25, 25, 0.09) 0%,
+    rgba(25, 25, 25, 0.03) 18%,
+    rgba(25, 25, 25, 0) 100%
+  );
+}
+
+.wood-shelf-frame {
+  background: linear-gradient(145deg, #e7d1b5 0%, #d7bc9a 100%);
+  box-shadow:
+    0 24px 54px -18px rgba(17, 18, 20, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.wood-cubby-cell {
+  background: linear-gradient(180deg, #cdb18f 0%, #e1cbb0 14%, #ead7be 100%);
+  box-shadow: inset 0 6px 14px rgba(84, 61, 35, 0.16);
+}
+
+.pegboard-surface {
+  background-color: #e4cfb4;
+  background-image: radial-gradient(rgba(107, 79, 46, 0.34) 1.6px, transparent 1.6px);
+  background-size: 26px 26px;
+  box-shadow:
+    0 24px 50px -16px rgba(17, 18, 20, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.shoe-rack-cell {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(226, 228, 232, 0.28) 100%);
+}
+
+@layer components {
+  .shoe-showcase {
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
