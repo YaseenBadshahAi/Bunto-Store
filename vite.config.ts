@@ -6,7 +6,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/BUNTO-Visual-Store-/',
+    base: '/Bunto-Store/',
     plugins: [
       react(),
       tailwindcss(),
@@ -43,3 +43,4 @@ export default defineConfig(() => {
     },
   };
 });
+
