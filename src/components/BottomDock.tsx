@@ -5,6 +5,7 @@ import { STORE_TABS, StoreCategory } from '../data/storeCatalog';
 
 interface BottomDockProps {
   activeTab: StoreCategory;
+  isLoginOpen: boolean;
   onSelectTab: (tab: StoreCategory) => void;
   ageFilter: string;
   onSelectAgeFilter: (age: string) => void;
@@ -14,6 +15,7 @@ const AGE_FILTERS = ['All Ages', '1–2Y', '2–3Y', '3–4Y', '5–6Y'];
 
 export function BottomDock({
   activeTab,
+  isLoginOpen,
   onSelectTab,
   ageFilter,
   onSelectAgeFilter,
@@ -35,7 +37,7 @@ export function BottomDock({
   return (
     <div
       ref={popoverRef}
-      className="pointer-events-auto fixed bottom-4 left-1/2 z-40 max-w-[calc(100vw-1rem)] -translate-x-1/2 sm:bottom-6"
+      className="pointer-events-auto fixed bottom-4 left-1/2 z-40 max-w-[calc(100vw-0.75rem)] -translate-x-1/2 sm:bottom-6"
     >
       {moreOpen && (
         <div
@@ -85,16 +87,16 @@ export function BottomDock({
 
       <nav
         aria-label="Store sections"
-        className="flex items-center gap-0.5 rounded-full border border-[#C9C5BE]/90 bg-[#F0EDE8]/95 p-1 shadow-[0_12px_36px_rgba(25,25,25,0.12)] backdrop-blur-md sm:p-1.5"
+        className="flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-[#C9C5BE]/90 bg-[#F0EDE8]/95 p-1 shadow-[0_12px_36px_rgba(25,25,25,0.12)] backdrop-blur-md sm:p-1.5 no-scrollbar"
       >
         {STORE_TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = !isLoginOpen && activeTab === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => onSelectTab(tab.id)}
-              className={`relative rounded-full px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-4.5 sm:py-2 sm:text-[13px] whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#191919] ${
+              className={`relative rounded-full px-2 py-1.5 text-[11px] font-medium transition-colors sm:px-4 sm:py-2 sm:text-[13px] whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#191919] ${
                 isActive ? 'text-white' : 'text-[#191919]/70 hover:text-[#191919]'
               }`}
             >

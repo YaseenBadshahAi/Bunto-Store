@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, Maximize2, Minimize2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Maximize2, Minimize2, ShoppingBag, User } from 'lucide-react';
 import {
   getProductsByCategory,
   StoreCategory,
@@ -10,9 +10,21 @@ import { VirtualRoom } from './components/VirtualRoom';
 import { BottomDock } from './components/BottomDock';
 import { ProductDetailOverlay } from './components/ProductDetailOverlay';
 import { BagDrawer, BagEntry } from './components/BagDrawer';
+import { LoginPage, StoreUserSession } from './components/LoginPage';
+
+const USER_STORAGE_KEY = 'bunto_member_session';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<StoreCategory>('store');
+  const [loginOpen, setLoginOpen] = useState<boolean>(false);
+  const [userSession, setUserSession] = useState<StoreUserSession | null>(() => {
+    try {
+      const saved = window.localStorage.getItem(USER_STORAGE_KEY);
+      return saved ? (JSON.parse(saved) as StoreUserSession) : null;
+    } catch {
+      return null;
+    }
+  });
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
   const [bagOpen, setBagOpen] = useState(false);
   const [bagEntries, setBagEntries] = useState<BagEntry[]>([]);
@@ -33,7 +45,7 @@ export default function App() {
   // Keyboard shortcuts to cycle tabs or exit full screen when no modal is open
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (selectedProduct || bagOpen) return;
+      if (selectedProduct || bagOpen || loginOpen) return;
       if (e.key === 'Escape' && shoesFullscreen) {
         setShoesFullscreen(false);
         if (document.fullscreenElement) {
@@ -51,7 +63,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [activeTab, selectedProduct, bagOpen, shoesFullscreen]);
+  }, [activeTab, selectedProduct, bagOpen, shoesFullscreen, loginOpen]);
 
   // Keep state synced if user exits native fullscreen via browser Esc
   useEffect(() => {
@@ -77,6 +89,8 @@ export default function App() {
   const handleBack = () => {
     if (selectedProduct) {
       setSelectedProduct(null);
+    } else if (loginOpen) {
+      setLoginOpen(false);
     } else if (shoesFullscreen) {
       setShoesFullscreen(false);
       if (document.fullscreenElement) {
@@ -89,6 +103,7 @@ export default function App() {
 
   const handleSelectTab = (tab: StoreCategory) => {
     setSelectedProduct(null);
+    setLoginOpen(false);
     if (tab !== 'shoes' && shoesFullscreen) {
       setShoesFullscreen(false);
       if (document.fullscreenElement) {
@@ -96,6 +111,39 @@ export default function App() {
       }
     }
     setActiveTab(tab);
+  };
+
+  const handleOpenLogin = () => {
+    setSelectedProduct(null);
+    if (shoesFullscreen) {
+      setShoesFullscreen(false);
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    }
+    setLoginOpen(true);
+  };
+
+  const handleLoginSuccess = (session: StoreUserSession, remember: boolean) => {
+    setUserSession(session);
+    try {
+      if (remember) {
+        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(session));
+      } else {
+        window.localStorage.removeItem(USER_STORAGE_KEY);
+      }
+    } catch {
+      // ignore storage failure
+    }
+  };
+
+  const handleLogout = () => {
+    setUserSession(null);
+    try {
+      window.localStorage.removeItem(USER_STORAGE_KEY);
+    } catch {
+      // ignore storage failure
+    }
   };
 
   const handleAddToBag = (product: StoreProduct, size: string, quantity: number) => {
@@ -129,15 +177,18 @@ export default function App() {
     ? getProductsByCategory(selectedProduct.category)
     : [];
 
-  const hideChrome = Boolean(selectedProduct) || (activeTab === 'shoes' && shoesFullscreen);
+  const hideStoreHeader =
+    loginOpen || Boolean(selectedProduct) || (activeTab === 'shoes' && shoesFullscreen);
+  const hideDock =
+    loginOpen || Boolean(selectedProduct) || (activeTab === 'shoes' && shoesFullscreen);
   const isHome = activeTab === 'store';
   const homeCenterOffsetY = Math.max(120, Math.round(viewportHeight * 0.5 - 42));
   const logoTransition = { duration: 0.78, ease: [0.16, 1, 0.3, 1] as const };
 
   return (
     <main className="relative h-full w-full overflow-hidden bg-[#F0EDE8] text-[#191919]">
-      {/* Fixed Top Navigation Chrome (hidden in full-screen shoe showcase or split product card) */}
-      {!hideChrome && (
+      {/* Fixed Top Navigation Chrome (hidden in Login split view, full-screen shoe showcase, or split product card) */}
+      {!hideStoreHeader && (
         <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5">
           {/* Top-left circular Back button */}
           <div className="pointer-events-auto">
@@ -158,8 +209,20 @@ export default function App() {
           {/* Spacer balancing the centered gliding brand lockup */}
           <div className="h-10 w-24" aria-hidden="true" />
 
-          {/* Top-right Shopping Bag Button */}
-          <div className="pointer-events-auto">
+          {/* Top-right Account & Shopping Bag Buttons */}
+          <div className="pointer-events-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleOpenLogin}
+              aria-label={userSession ? `Account (${userSession.name})` : 'Sign in to BUNTO'}
+              className="flex h-10 items-center gap-1.5 rounded-full px-2.5 text-[#191919] transition-colors hover:bg-[#191919]/6 focus-visible:outline-2 focus-visible:outline-[#191919]"
+            >
+              <User className="h-[18px] w-[18px]" strokeWidth={1.65} />
+              <span className="hidden text-xs font-semibold sm:inline">
+                {userSession ? userSession.name.split(' ')[0] : 'Login'}
+              </span>
+            </button>
+
             <button
               type="button"
               onClick={() => setBagOpen(true)}
@@ -188,7 +251,7 @@ export default function App() {
 
       {/* Persistent Gliding Brand Logo: starts dead-center on Home and glides smoothly upward into header on section enter */}
       <AnimatePresence>
-        {!hideChrome && (
+        {!hideStoreHeader && (
           <motion.button
             key="bunto-gliding-logo"
             type="button"
@@ -257,7 +320,7 @@ export default function App() {
 
       {/* Full-Screen Showcase Toggle Button on Shoes Wall */}
       <AnimatePresence>
-        {activeTab === 'shoes' && !selectedProduct && (
+        {!loginOpen && activeTab === 'shoes' && !selectedProduct && (
           <motion.button
             key="shoes-fullscreen-btn"
             type="button"
@@ -286,6 +349,18 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Split-Screen Editorial Login View */}
+      <AnimatePresence>
+        {loginOpen && (
+          <LoginPage
+            user={userSession}
+            onLoginSuccess={handleLoginSuccess}
+            onLogout={handleLogout}
+            onNavigateStore={(tab) => handleSelectTab(tab ?? 'store')}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Product Detail Focus Overlay (50/50 Split Card) */}
       <ProductDetailOverlay
         product={selectedProduct}
@@ -298,10 +373,11 @@ export default function App() {
         onAddToBag={handleAddToBag}
       />
 
-      {/* Floating Bottom Pill Navbar (hidden in full-screen shoe showcase or split product card) */}
-      {!hideChrome && (
+      {/* Floating Bottom Pill Navbar (hidden on Login page, full-screen shoe showcase, or split product card) */}
+      {!hideDock && (
         <BottomDock
           activeTab={activeTab}
+          isLoginOpen={loginOpen}
           onSelectTab={handleSelectTab}
           ageFilter={ageFilter}
           onSelectAgeFilter={setAgeFilter}

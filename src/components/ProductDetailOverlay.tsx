@@ -30,7 +30,7 @@ interface ProductDetailOverlayProps {
   onAddToBag: (product: StoreProduct, size: string, quantity: number) => void;
 }
 
-type ThumbnailView = 0 | 1 | 2;
+type ThumbnailView = 0 | 1 | 2 | 3;
 
 export function ProductDetailOverlay({
   product,
@@ -100,11 +100,13 @@ function ProductDetailContent({
     if (nextThumb === activeThumb) return;
     setSlideDir(dir ?? (nextThumb > activeThumb ? 1 : -1));
     setActiveThumb(nextThumb);
-    setRotateProgress(nextThumb === 0 ? 0.5 : nextThumb === 1 ? 0.16 : 0.84);
+    setRotateProgress(
+      nextThumb === 0 ? 0.5 : nextThumb === 1 ? 0.16 : nextThumb === 2 ? 0.84 : 0.68
+    );
   };
 
   const stepPhoto = (delta: number) => {
-    const nextThumb = ((activeThumb + delta + 3) % 3) as ThumbnailView;
+    const nextThumb = ((activeThumb + delta + 4) % 4) as ThumbnailView;
     selectPhoto(nextThumb, delta > 0 ? 1 : -1);
   };
 
@@ -179,6 +181,8 @@ function ProductDetailContent({
       ? { scale: 1.52, x: 16, y: 42, rotateZ: -3 }
       : activeThumb === 2
       ? { scale: 1.52, x: -16, y: -42, rotateZ: 3 }
+      : activeThumb === 3
+      ? { scale: 1.24, x: -12, y: 12, rotateZ: 7 }
       : { scale: 1, x: 0, y: 0, rotateZ: 0 };
 
   const activeOverride = selectedSwatch
@@ -197,7 +201,7 @@ function ProductDetailContent({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-0 z-40 flex flex-col overflow-x-hidden overflow-y-auto bg-[#F0EDE8] lg:flex-row lg:overflow-hidden"
+        className="fixed inset-0 z-50 flex flex-col overflow-x-hidden overflow-y-auto bg-[#F0EDE8] lg:flex-row lg:overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={product.name}
@@ -284,6 +288,16 @@ function ProductDetailContent({
                   <motion.div
                     key={`${product.id}-${selectedSwatch?.name ?? 'base'}-${activeThumb}`}
                     custom={slideDir}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.4}
+                    onDragEnd={(_e, info) => {
+                      if (info.offset.x < -38 || info.velocity.x < -280) {
+                        stepPhoto(1);
+                      } else if (info.offset.x > 38 || info.velocity.x > 280) {
+                        stepPhoto(-1);
+                      }
+                    }}
                     variants={{
                       enter: (dir: 1 | -1) => ({ opacity: 0, x: dir * 48, scale: 0.94 }),
                       exit: (dir: 1 | -1) => ({ opacity: 0, x: -dir * 48, scale: 0.94 }),
@@ -299,7 +313,7 @@ function ProductDetailContent({
                     }}
                     exit="exit"
                     transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                    className="h-full w-full"
+                    className="h-full w-full cursor-grab active:cursor-grabbing touch-pan-y"
                   >
                     <ProductArtwork
                       product={product}
@@ -367,15 +381,17 @@ function ProductDetailContent({
               </span>
             </div>
 
-            {/* 3 Rounded Detail Thumbnails */}
-            <div className="mt-4 flex items-center justify-center gap-3.5 sm:gap-4">
-              {([0, 1, 2] as ThumbnailView[]).map((viewIdx) => {
+            {/* 4 Rounded Draggable Detail Thumbnails */}
+            <div className="mt-4 flex items-center justify-center gap-2.5 sm:gap-3.5">
+              {([0, 1, 2, 3] as ThumbnailView[]).map((viewIdx) => {
                 const isSelected = activeThumb === viewIdx;
                 const cropStyle =
                   viewIdx === 1
                     ? 'scale-[1.78] translate-x-1.5 translate-y-4 -rotate-3'
                     : viewIdx === 2
                     ? 'scale-[1.78] -translate-x-1.5 -translate-y-4 rotate-3'
+                    : viewIdx === 3
+                    ? 'scale-[1.35] -translate-x-1 translate-y-1 rotate-6'
                     : 'scale-95';
 
                 return (
@@ -388,9 +404,11 @@ function ProductDetailContent({
                         ? 'Full studio view'
                         : viewIdx === 1
                         ? 'Upper fabric detail'
-                        : 'Lower stitch detail'
+                        : viewIdx === 2
+                        ? 'Lower stitch detail'
+                        : 'Angled studio profile'
                     }
-                    className={`relative h-16 w-16 overflow-hidden rounded-xl bg-[#E8E5DF] p-2 transition-all sm:h-[72px] sm:w-[72px] ${
+                    className={`relative h-14 w-14 overflow-hidden rounded-xl bg-[#E8E5DF] p-2 transition-all sm:h-[68px] sm:w-[68px] ${
                       isSelected
                         ? 'ring-2 ring-[#191919] shadow-sm'
                         : 'border border-[#C9C5BE] opacity-80 hover:opacity-100'
